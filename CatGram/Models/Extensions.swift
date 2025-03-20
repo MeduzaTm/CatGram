@@ -33,3 +33,14 @@ extension UIView {
     }
 }
 
+extension UIImageView {
+    func loadImage(from urlString: String?) {
+        guard let url = urlString else { return }
+        UserDataManager.shared.loadImage(from: url) { [weak self] image in
+            DispatchQueue.main.async {
+                self?.image = image
+            }
+        }
+    }
+}
+

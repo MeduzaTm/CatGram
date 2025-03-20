@@ -83,7 +83,6 @@ final class PostDataManager: DataManagerProtocol {
     // Асинхронные методы
     func asyncSave(_ model: Post, completion: @escaping (Result<Void, Error>) -> Void) {
         saveQueue.addOperation {
-            Thread.sleep(forTimeInterval: 1) // Имитация задержки
             self.posts.append(model)
             completion(.success(()))
         }
@@ -91,7 +90,6 @@ final class PostDataManager: DataManagerProtocol {
     
     func asyncGet(by id: UUID, completion: @escaping (Result<Post, Error>) -> Void) {
         getQueue.addOperation {
-            Thread.sleep(forTimeInterval: 1) // Имитация задержки
             if let post = self.posts.first(where: { $0.id == id }) {
                 completion(.success(post))
             } else {
@@ -102,7 +100,6 @@ final class PostDataManager: DataManagerProtocol {
     
     func asyncDelete(by id: UUID, completion: @escaping (Result<Void, Error>) -> Void) {
         deleteQueue.addOperation {
-            Thread.sleep(forTimeInterval: 1) // Имитация задержки
             if self.posts.contains(where: { $0.id == id }) {
                 self.posts.removeAll { $0.id == id }
                 completion(.success(()))
@@ -114,15 +111,13 @@ final class PostDataManager: DataManagerProtocol {
     
     func asyncSearch(by name: String, completion: @escaping (Result<[Post], Error>) -> Void) {
         searchQueue.addOperation {
-            Thread.sleep(forTimeInterval: 1) // Имитация задержки
-            let results = self.posts.filter { $0.caption.contains(name) }
+            let results = self.posts.filter { $0.caption.lowercased().contains(name.lowercased()) }
             completion(.success(results))
         }
     }
     
     func asyncGetAll(completion: @escaping (Result<[Post], Error>) -> Void) {
         getQueue.addOperation {
-            Thread.sleep(forTimeInterval: 1) // Имитация задержки
             completion(.success(self.posts))
         }
     }

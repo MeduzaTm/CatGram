@@ -2,151 +2,58 @@
 //  PostCellView.swift
 //  CatGram
 //
-//  Created by Нурик  Генджалиев   on 14.03.2025.
+//  Created by Нурик  Генджалиев   on 19.03.2025.
 //
 
 import UIKit
 
 class PostCellView: UICollectionViewCell {
-    override var reuseIdentifier: String {
-        "PostCellView"
-    }
     
-    var onOptionsButtonTapped: (() -> Void)?
-    
-    private let avatarImageView: UIImageView = {
+    private let imageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
-        imageView.layer.cornerRadius = 20
+        imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
-    }()
-    
-    private let usernameLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 14, weight: .medium)
-        label.textColor = .black
-        return label
-    }()
-    private let optionsButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setImage(UIImage(systemName: "ellipsis"), for: .normal)
-        button.tintColor = .black
-        button.addTarget(self, action: #selector(optionsButtonTapped), for: .touchUpInside)
-        return button
-    }()
-    
-    private let postImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFill
-        imageView.clipsToBounds = true
-        return imageView
-    }()
-    
-    private let likeButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setImage(UIImage(systemName: "heart"), for: .normal)
-        button.tintColor = .black
-        return button
-    }()
-    
-    private let commentButton: UIButton = {
-        let button = UIButton()
-        button.setImage(UIImage(systemName: "message"), for: .normal)
-        button.tintColor = .black
-        return button
-    }()
-    
-    private let shareButton: UIButton = {
-        let button = UIButton()
-        button.setImage(UIImage(systemName: "paperplane"), for: .normal)
-        button.tintColor = .black
-        return button
-    }()
-    
-    private let favoriteButton: UIButton = {
-        let button = UIButton()
-        button.setImage(UIImage(systemName: "bookmark"), for: .normal)
-        button.tintColor = .black
-        return button
-    }()
-    
-    // Подпись и дата
-    private let captionLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14)
-        label.numberOfLines = 0
-        label.textColor = .gray
-        return label
-    }()
-    
-    private let dateLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 12)
-        label.textColor = .gray
-        return label
     }()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        setupUI()
+        contentView.addSubview(imageView)
+        
+        NSLayoutConstraint.activate([
+            imageView.topAnchor.constraint(equalTo: contentView.topAnchor),
+            imageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            imageView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            imageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor)
+            
+        ])
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    // Настройка UI
-    private func setupUI() {
-        let headerStackView = UIStackView(arrangedSubviews: [avatarImageView, usernameLabel, optionsButton])
-        headerStackView.spacing = 8
-        headerStackView.alignment = .center
+    func configure(with imageURL: String) {
+        guard let url = URL(string: imageURL) else {
+            print("Invalid URL: \(imageURL)")
+            return
+        }
         
-        let buttonsStackView = UIStackView(arrangedSubviews: [likeButton, commentButton, shareButton, UIView(), favoriteButton])
-        buttonsStackView.spacing = 12
-        
-        let mainStackView = UIStackView(arrangedSubviews: [headerStackView, postImageView, buttonsStackView, captionLabel, dateLabel])
-        mainStackView.axis = .vertical
-        mainStackView.spacing = 8
-        
-        contentView.addSubview(mainStackView)
-        mainStackView.translatesAutoresizingMaskIntoConstraints = false
-        
-        NSLayoutConstraint.activate([
-            mainStackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
-            mainStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 8),
-            mainStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -8),
-            mainStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
-            
-            avatarImageView.widthAnchor.constraint(equalToConstant: 40),
-            avatarImageView.heightAnchor.constraint(equalToConstant: 40),
-            
-            postImageView.heightAnchor.constraint(equalTo: postImageView.widthAnchor, multiplier: 1) // Квадратное изображение
-        ])
-    }
-    
-    @objc private func optionsButtonTapped() {
-           onOptionsButtonTapped?() // Вызываем замыкание при нажатии
-       }
-    
-    // Настройка данных
-    func configure(with post: Post, and user: User) {
-        UserDataManager.shared.loadImage(from: user.avatarURL) { image in
-                DispatchQueue.main.async {
-                    self.avatarImageView.image = image // Обновляем изображение на главном потоке
-                }
+        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+            if let error = error {
+                print("Failed to load image: \(error.localizedDescription)")
+                return
             }
-        usernameLabel.text = user.username
-        UserDataManager.shared.loadImage(from: post.imageURL) { image in
-                DispatchQueue.main.async {
-                    self.postImageView.image = image // Обновляем изображение на главном потоке
-                }
+            
+            guard let data = data, let image = UIImage(data: data) else {
+                print("Failed to convert data to image")
+                return
             }
-        captionLabel.text = post.caption
-        dateLabel.text = post.date.formatted() // Форматирование даты
-        
-        likeButton.setImage(UIImage(systemName: post.isLiked ? "heart.fill" : "heart"), for: .normal)
-        favoriteButton.setImage(UIImage(systemName: post.isFavorited ? "bookmark.fill" : "bookmark"), for: .normal)
+            
+            DispatchQueue.main.async {
+                self?.imageView.image = image
+            }
+        }.resume()
     }
-    
 }
