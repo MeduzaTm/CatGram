@@ -129,18 +129,8 @@ class PostCellDetailView: UICollectionViewCell {
     }
 
     func configure(with post: Post, and user: User) {
-        UserDataManager.shared.loadImage(from: user.avatarURL) { image in
-                DispatchQueue.main.async {
-                    self.avatarImageView.image = image
-                }
-            }
-        
-        UserDataManager.shared.loadImage(from: post.imageURL) { image in
-                DispatchQueue.main.async {
-                    self.postImageView.image = image
-                }
-            }
-        
+        avatarImageView.loadImageView(from: user.avatarURL)
+        postImageView.loadImageView(from: post.imageURL)
         usernameLabel.text = user.username
         captionLabel.text = post.caption
         dateLabel.text = post.date.formatted()

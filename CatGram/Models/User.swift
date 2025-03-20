@@ -10,9 +10,9 @@ import Foundation
 struct User: Identifiable {
     let id: UUID
     let username: String
-    let avatarURL: String // URL или имя изображения в ассетах
-    let surname: String // Описание профиля
-    let postsCount: Int // Количество постов
-    let followersCount: Int // Количество подписчиков
-    let followingCount: Int // Количество подписок
+    let avatarURL: String
+    let surname: String
+    let postsCount: Int
+    let followersCount: Int
+    let followingCount: Int
 }

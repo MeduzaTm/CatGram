@@ -16,7 +16,6 @@ class ProfileViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         navigationController?.navigationBar.isHidden = true
-//        navigationItem.setHidesBackButton(false, animated: true)
         navigationItem.backBarButtonItem = UIBarButtonItem(title: nil, style: .plain, target: nil, action: nil)
     }
     
@@ -41,6 +40,7 @@ class ProfileViewController: UIViewController {
             mainCollectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
+
 }
 
 

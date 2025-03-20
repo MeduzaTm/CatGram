@@ -8,6 +8,7 @@
 import UIKit
 
 final class ProfileCollectionView: UICollectionView {
+    private var posts: [Post] = []
     
     override init(frame: CGRect, collectionViewLayout layout: UICollectionViewLayout) {
         let layout = UICollectionViewFlowLayout()
@@ -17,11 +18,36 @@ final class ProfileCollectionView: UICollectionView {
         
         super.init(frame: frame, collectionViewLayout: layout)
         setupUI()
+        loadData()
+        setupNotifications()
     }
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         setupUI()
+    }
+    
+    private func loadData() {
+        let result = PostDataManager.shared.syncGetAll()
+        switch result {
+        case .success(let posts):
+            self.posts = posts
+            reloadData()
+        case .failure(let error):
+            print("Failed to load posts: \(error.localizedDescription)")
+        }
+    }
+    
+    private func setupNotifications() {
+        NotificationCenter.default.addObserver(self, selector: #selector(handlePostDeleted), name: NSNotification.Name("PostDeleted"), object: nil)
+    }
+    
+    @objc private func handlePostDeleted() {
+        loadData()
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     private func setupUI() {
@@ -31,18 +57,17 @@ final class ProfileCollectionView: UICollectionView {
         dataSource = self
         delegate = self
     }
-    
 }
 
 extension ProfileCollectionView: UICollectionViewDataSource, UICollectionViewDelegate {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return PostDataManager.shared.posts.count
+        return posts.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PostCell", for: indexPath) as! PostCellView
-        let post = PostDataManager.shared.posts[indexPath.item]
+        let post = posts[indexPath.item]
         cell.configure(with: post.imageURL)
         return cell
     }
@@ -54,6 +79,5 @@ extension ProfileCollectionView: UICollectionViewDataSource, UICollectionViewDel
         }
         let index = indexPath.item
         parentVC.navigationController?.pushViewController(PostsFeedView(selectedIndex: index), animated: true)
-        
     }
 }

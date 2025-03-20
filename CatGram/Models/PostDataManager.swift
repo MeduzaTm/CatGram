@@ -10,14 +10,14 @@ import Foundation
 protocol DataManagerProtocol {
     associatedtype Model: Identifiable
     
-    // Синхронные методы
+    // sync methods
     func syncSave(_ model: Model) -> Result<Void, Error>
     func syncGet(by id: Model.ID) -> Result<Model, Error>
     func syncDelete(by id: Model.ID) -> Result<Void, Error>
     func syncSearch(by name: String) -> Result<[Model], Error>
     func syncGetAll() -> Result<[Model], Error>
     
-    // Асинхронные методы
+    // async methods
     func asyncSave(_ model: Model, completion: @escaping (Result<Void, Error>) -> Void)
     func asyncGet(by id: Model.ID, completion: @escaping (Result<Model, Error>) -> Void)
     func asyncDelete(by id: Model.ID, completion: @escaping (Result<Void, Error>) -> Void)
@@ -26,14 +26,11 @@ protocol DataManagerProtocol {
 }
 
 final class PostDataManager: DataManagerProtocol {
-    
-    // Статический экземпляр для реализации синглтона
+
     static let shared = PostDataManager()
-    
-    // Приватный инициализатор
+
     private init() {}
-    
-    // Зашитые данные
+
     var posts: [Post] = [
         Post(id: UUID(), imageURL: "https://cs6.livemaster.ru/storage/51/8d/e9304e78c01418b5ea956d3be36a.jpg", caption: "Cute cat", date: Date(), isLiked: false, isFavorited: false),
         Post(id: UUID(), imageURL: "https://masterpiecer-images.s3.yandex.net/5fd531dca6427c7:upscaled", caption: "Sleepy cat", date: Date(), isLiked: false, isFavorited: false),
@@ -41,14 +38,12 @@ final class PostDataManager: DataManagerProtocol {
         Post(id: UUID(), imageURL: "https://yarcube.ru/upload/medialibrary/eec/photo_2023_03_01_13_56_52.jpg", caption: "Gangsta cat", date: Date(), isLiked: false, isFavorited: false),
 
     ]
-    
-    // Очереди для асинхронных операций
+
     private let saveQueue = OperationQueue()
     private let getQueue = OperationQueue()
     private let deleteQueue = OperationQueue()
     private let searchQueue = OperationQueue()
-    
-    // Синхронные методы
+
     func syncSave(_ model: Post) -> Result<Void, Error> {
         posts.append(model)
         return .success(())
@@ -79,8 +74,7 @@ final class PostDataManager: DataManagerProtocol {
     func syncGetAll() -> Result<[Post], Error> {
         return .success(posts)
     }
-    
-    // Асинхронные методы
+
     func asyncSave(_ model: Post, completion: @escaping (Result<Void, Error>) -> Void) {
         saveQueue.addOperation {
             self.posts.append(model)

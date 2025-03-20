@@ -34,13 +34,36 @@ extension UIView {
 }
 
 extension UIImageView {
-    func loadImage(from urlString: String?) {
+    func loadImageView(from urlString: String?) {
         guard let url = urlString else { return }
-        UserDataManager.shared.loadImage(from: url) { [weak self] image in
+        loadImage(from: url) { [weak self] image in
             DispatchQueue.main.async {
                 self?.image = image
             }
         }
+    }
+    
+    private func loadImage(from urlString: String, completion: @escaping (UIImage?) -> Void) {
+        guard let url = URL(string: urlString) else {
+            print("Invalid URL: \(urlString)")
+            completion(nil)
+            return
+        }
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                print("Failed to load image: \(error.localizedDescription)")
+                completion(nil)
+                return
+            }
+
+            guard let data = data, let image = UIImage(data: data) else {
+                print("Failed to convert data to image")
+                completion(nil)
+                return
+            }
+            
+            completion(image)
+        }.resume()
     }
 }
 

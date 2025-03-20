@@ -10,6 +10,7 @@ import UIKit
 
 class PostsFeedView: UICollectionViewController, UICollectionViewDelegateFlowLayout, UISearchResultsUpdating {
     private var selectedIndex: Int?
+    private var posts = PostDataManager.shared.posts
     private var filteredPosts: [Post] = []
     private let searchController = UISearchController(searchResultsController: nil)
     
@@ -59,32 +60,54 @@ class PostsFeedView: UICollectionViewController, UICollectionViewDelegateFlowLay
     }
     
     func updateSearchResults(for searchController: UISearchController) {
-            let searchBar = searchController.searchBar
-            if let searchText = searchBar.text, !searchText.isEmpty {
-                PostDataManager.shared.asyncSearch(by: searchText) { [weak self] result in
-                    DispatchQueue.main.async {
-                        switch result {
-                        case .success(let posts):
-                            self?.filteredPosts = posts
-                            self?.collectionView.reloadData()
-                        case .failure(let error):
-                            print("Search failed with error: \(error)")
-                        }
+        let searchBar = searchController.searchBar
+        if let searchText = searchBar.text, !searchText.isEmpty {
+            PostDataManager.shared.asyncSearch(by: searchText) { [weak self] result in
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let posts):
+                        self?.filteredPosts = posts
+                        self?.collectionView.reloadData()
+                    case .failure(let error):
+                        print("Search failed with error: \(error)")
                     }
                 }
-            } else {
-                filteredPosts = []
-                collectionView.reloadData()
             }
+        } else {
+            filteredPosts = []
+            collectionView.reloadData()
         }
+    }
     
     private func showDeleteAlert(for index: Int) {
         let ac = UIAlertController(title: "Delete Post", message: "Are you sure you want to delete this post?", preferredStyle: .alert)
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         ac.addAction(UIAlertAction(title: "Delele", style: .destructive, handler: { _ in
-//            PostDataManager.shared.
+            self.deletePost(at: index)
         }))
         present(ac, animated: true)
+    }
+    
+    private func deletePost(at index: Int) {
+        guard !posts.isEmpty, index < posts.count else { return }
+        
+        let post = posts[index]
+        PostDataManager.shared.asyncDelete(by: post.id) { [weak self] result in
+            switch result {
+            case .success:
+                DispatchQueue.main.async {
+                    self?.posts.remove(at: index)
+                    if ((self?.posts.isEmpty) != nil) {
+                        self?.collectionView.reloadData()
+                    } else {
+                        self?.collectionView.deleteItems(at: [IndexPath(item: index, section: 0)])
+                    }
+                    NotificationCenter.default.post(name: NSNotification.Name("PostDeleted"), object: nil)
+                }
+            case .failure(let error):
+                print("Failed to delete post: \(error.localizedDescription)")
+            }
+        }
     }
     
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -109,12 +132,11 @@ class PostsFeedView: UICollectionViewController, UICollectionViewDelegateFlowLay
         let imageHeight = width
         let headerHeight: CGFloat = 60
         let actionsHeight: CGFloat = 50
-        let captionHeight = post.caption.height(withConstrainedWidth: width - 32, font: UIFont.systemFont(ofSize: 14)) // Высота подписи
+        let captionHeight = post.caption.height(withConstrainedWidth: width - 32, font: UIFont.systemFont(ofSize: 14))
         let dateHeight: CGFloat = 20
         
-        let totalHeight = headerHeight + imageHeight + actionsHeight + captionHeight + dateHeight + 16 // Отступы
+        let totalHeight = headerHeight + imageHeight + actionsHeight + captionHeight + dateHeight + 16
         
         return CGSize(width: width, height: totalHeight)
-        
     }
 }

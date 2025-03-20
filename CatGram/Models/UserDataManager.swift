@@ -26,33 +26,6 @@ final class UserDataManager: DataManagerProtocol {
     private let deleteQueue = OperationQueue()
     private let searchQueue = OperationQueue()
     
-    func loadImage(from urlString: String, completion: @escaping (UIImage?) -> Void) {
-        // Проверяем, что URL-строка корректна
-        guard let url = URL(string: urlString) else {
-            print("Invalid URL: \(urlString)")
-            completion(nil)
-            return
-        }
-        
-        // Создаем задачу для загрузки данных
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            // Обрабатываем ошибки
-            if let error = error {
-                print("Failed to load image: \(error.localizedDescription)")
-                completion(nil)
-                return
-            }
-            // Проверяем, что данные получены и могут быть преобразованы в изображение
-            guard let data = data, let image = UIImage(data: data) else {
-                print("Failed to convert data to image")
-                completion(nil)
-                return
-            }
-            
-            // Возвращаем изображение через completion handler
-            completion(image)
-        }.resume() // Запускаем задачу
-    }
     
     func syncSave(_ model: User) -> Result<Void, Error> {
         users.append(model)
@@ -84,8 +57,7 @@ final class UserDataManager: DataManagerProtocol {
     func syncGetAll() -> Result<[User], Error> {
         return .success(users)
     }
-    
-    // Асинхронные методы
+
     func asyncSave(_ model: User, completion: @escaping (Result<Void, Error>) -> Void) {
         saveQueue.addOperation {
             Thread.sleep(forTimeInterval: 1) // Имитация задержки
@@ -131,6 +103,4 @@ final class UserDataManager: DataManagerProtocol {
             completion(.success(self.users))
         }
     }
-    
-    
 }
